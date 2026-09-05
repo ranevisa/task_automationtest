@@ -38,32 +38,36 @@ Viewing CI Test Reports:
 2. Click on the latest workflow run.
 3. Scroll down to the Artifacts section and download html-test-report.
 
+--- 
 3. Test Strategy
-Happy Path Coverage:
+a. Happy Path Coverage:
 - POST /users: Verifies successful user creation (returns status 201 and validates response payload).
 - GET /users/{id}: Verifies fetching existing user details (returns status 200 with correct structure).
 
-Negative Scenarios:
+b. Negative Scenarios:
 - GET /users/{id} with non-existent ID (asserts 404 Not Found).
 - POST /users with empty body / missing required fields (asserts 400 Bad Request or validation status).
 - Accessing invalid endpoint path (asserts 404 Not Found).
 
-Design Principles:
-- Clean & Maintainable Code: Kept test scripts modular and clean.
-- Test Autonomy: Each test scenario is independent and does not rely on state left by previous tests.
+Clean and Maintainable Code: Test scripts are organized by scenario (minimal have positive, negative, edge). 
+Testing Methodology: Carried out in a structured and documented manner.
 
-4. Assumptions & Limitations
+Assumptions & Limitations
 - Public Mock API: Tests utilize https://reqres.in as the base API server.
 - Data Persistence: Since mock endpoints do not persist POST requests indefinitely, dynamic response structure validation is prioritized over database persistence.
 - Rate Limits: Public APIs may be subject to occasional external latency or throttling in shared CI environments.
+- Any Assumption: Do the stress test and performance with unique case and users from a wide variety of backgrounds who use the app. Because everyone is unique. 
 
-5. Additional Question: Scaling Automation (20 to 1,000+ Tests)
-- To keep execution time, reliability, and maintenance effort manageable when scaling to 1,000+ tests, I would implement the following strategy:
+**Additional Question: Scaling Automation (20 to 1,000+ Tests)**
+- To keep execution time, reliability, and maintenance effort under control when scaling up to over 1,000 tests, I would implement the following strategies:
 1. Parallelization & Sharding:
- - Utilize Playwright's parallel execution and test sharding across multiple CI workers to execute tests concurrently, keeping total runtime under a few minutes.
+Split and execute Playwright tests concurrently within the CI/CD pipeline using sharding techniques, allowing time-consuming tests to complete in just a few minutes.
+
 2. Test Data Management & Isolation:
- - Avoid test interdependencies. Use factory/fixture patterns to generate isolated dynamic test data per test run and clean up after execution.
+Set up dynamic test data beforehand and clean it up once execution is complete.
+
 3. API Abstraction Layer (Client Pattern):
- - Encapsulate endpoint calls into dedicated API client classes. Endpoint URL or header changes will only require updating a single class rather than thousands of test files.
+Encapsulate all endpoints within separate API classes; this ensures that if a URL or header changes, updates only need to be made in a single file.
+
 4. Test Categorization & Selective Execution:
- - Tag tests (e.g., @smoke, @regression, @sanity). Run fast @smoke suites on every PR, while reserving full @regression suites for scheduled nightly builds.
+Tag tests based on their function—such as `@smoke` for quick checks on new code (PRs) and `@regression` for automated, comprehensive testing.
